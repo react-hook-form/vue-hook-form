@@ -1,15 +1,20 @@
-import { useForm } from './useForm'
+import { useForm } from "./useForm";
 
 export default {
-  name: 'App',
+  name: "App",
   setup() {
-    return useForm()
+    return useForm();
+  },
+  onSubmit(data) {
+    console.log(data);
   },
   render() {
-    return <form>
-      <input ref={this.register({ requiired: true })} name="firstName" />
-      <input ref={this.register({ requiired: true })} name="lastName" />
-      <button>Submit</button>
-    </form>
+    return (
+      <form onSubmit={this.handleSubmit(this.onSubmit)}>
+        <input ref={this.register({ required: true })} name="firstName" />
+        <input ref={this.register({ required: true })} name="lastName" />
+        <button>Submit</button>
+      </form>
+    );
   }
-}
+};
