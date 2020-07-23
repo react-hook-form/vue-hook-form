@@ -9,6 +9,7 @@ export default {
     console.log(data);
   },
   render() {
+    console.log('render....', this.test);
     return (
       <form onSubmit={this.handleSubmit(this.onSubmit)}>
         <input ref={this.register({ required: true })} name="firstName" />

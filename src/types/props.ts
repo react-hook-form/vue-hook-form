@@ -7,7 +7,6 @@ import {
   Control,
 } from './form';
 import { Assign } from './utils';
-import * as React from 'react';
 
 export type FormProviderProps<
   TFieldValues extends FieldValues = FieldValues

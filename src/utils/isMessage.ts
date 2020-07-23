@@ -1,7 +1,6 @@
-import { isValidElement } from 'react';
-import isString from '../utils/isString';
-import isObject from '../utils/isObject';
-import { Message } from '../types/form';
+import isString from "../utils/isString";
+import isObject from "../utils/isObject";
+import { Message } from "../types/form";
 
 export default (value: unknown): value is Message =>
-  isString(value) || (isObject(value) && isValidElement(value));
+  isString(value) || isObject(value);

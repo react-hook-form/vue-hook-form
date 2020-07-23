@@ -1,12 +1,11 @@
-import * as React from 'react';
 import {
   EmptyObject,
   NonUndefined,
   LiteralToPrimitive,
   DeepPartial,
   DeepMap,
-  IsFlatObject,
-} from './utils';
+  IsFlatObject
+} from "./utils";
 
 declare const $NestedValue: unique symbol;
 
@@ -33,10 +32,10 @@ export type NestedValue<TValue extends any[] | object = any[] | object> = {
 export type UnpackNestedValue<T> = NonUndefined<T> extends NestedValue<infer U>
   ? U
   : NonUndefined<T> extends Date | FileList
-  ? T
-  : NonUndefined<T> extends object
-  ? { [K in keyof T]: UnpackNestedValue<T[K]> }
-  : T;
+    ? T
+    : NonUndefined<T> extends object
+      ? { [K in keyof T]: UnpackNestedValue<T[K]> }
+      : T;
 
 export type DefaultValuesAtRender<TFieldValues> = UnpackNestedValue<
   DeepPartial<Record<InternalFieldName<TFieldValues>, FieldValue<TFieldValues>>>
@@ -51,17 +50,17 @@ export type FieldElement<TFieldValues extends FieldValues = FieldValues> =
 export type Ref = FieldElement;
 
 export type ValidationMode = {
-  onBlur: 'onBlur';
-  onChange: 'onChange';
-  onSubmit: 'onSubmit';
-  all: 'all';
+  onBlur: "onBlur";
+  onChange: "onChange";
+  onSubmit: "onSubmit";
+  all: "all";
 };
 
 export type Mode = keyof ValidationMode;
 
 export type SubmitHandler<TFieldValues extends FieldValues> = (
   data: UnpackNestedValue<TFieldValues>,
-  event?: React.BaseSyntheticEvent,
+  event?: React.BaseSyntheticEvent
 ) => void | Promise<void>;
 
 export type ResolverSuccess<TFieldValues extends FieldValues = FieldValues> = {
@@ -84,7 +83,7 @@ export type Resolver<
 > = (
   values: TFieldValues,
   context?: TContext,
-  validateAllFieldCriteria?: boolean,
+  validateAllFieldCriteria?: boolean
 ) => Promise<ResolverResult<TFieldValues>>;
 
 export type UseFormOptions<
@@ -98,7 +97,7 @@ export type UseFormOptions<
   context: TContext;
   shouldFocusError: boolean;
   shouldUnregister: boolean;
-  criteriaMode: 'firstError' | 'all';
+  criteriaMode: "firstError" | "all";
 }>;
 
 export type MutationWatcher = {
@@ -222,7 +221,7 @@ export type FieldValuesFromControl<
 export type FieldArrayName = string;
 
 export type UseFieldArrayOptions<
-  TKeyName extends string = 'id',
+  TKeyName extends string = "id",
   TControl extends Control = Control
 > = {
   name: FieldArrayName;
@@ -232,7 +231,7 @@ export type UseFieldArrayOptions<
 
 export type Control<TFieldValues extends FieldValues = FieldValues> = Pick<
   UseFormMethods<TFieldValues>,
-  'register' | 'unregister' | 'setValue' | 'getValues' | 'trigger' | 'formState'
+  "register" | "unregister" | "setValue" | "getValues" | "trigger" | "formState"
 > & {
   reRender: VoidFunction;
   removeFieldEventListener: (field: Field, forceDelete?: boolean) => void;
@@ -282,14 +281,14 @@ export type Control<TFieldValues extends FieldValues = FieldValues> = Pick<
   watchInternal: (
     fieldNames?: string | string[],
     defaultValue?: unknown,
-    watchId?: string,
+    watchId?: string
   ) => unknown;
   renderWatchedInputs: (name: string, found?: boolean) => void;
 };
 
 export type ArrayField<
   TFieldArrayValues extends FieldValues = FieldValues,
-  TKeyName extends string = 'id'
+  TKeyName extends string = "id"
 > = TFieldArrayValues & Record<TKeyName, string>;
 
 export type OmitResetState = Partial<
@@ -306,12 +305,12 @@ export type UseWatchOptions = {
 
 export type UseFormMethods<TFieldValues extends FieldValues = FieldValues> = {
   register<TFieldElement extends FieldElement<TFieldValues>>(
-    rules?: ValidationRules,
+    rules?: ValidationRules
   ): (ref: (TFieldElement & Ref) | null) => void;
   register(name: FieldName<TFieldValues>, rules?: ValidationRules): void;
   register<TFieldElement extends FieldElement<TFieldValues>>(
     ref: (TFieldElement & Ref) | null,
-    rules?: ValidationRules,
+    rules?: ValidationRules
   ): void;
   unregister(name: FieldName<TFieldValues> | FieldName<TFieldValues>[]): void;
   watch(): UnpackNestedValue<TFieldValues>;
@@ -319,7 +318,7 @@ export type UseFormMethods<TFieldValues extends FieldValues = FieldValues> = {
     name: TFieldName,
     defaultValue?: TFieldName extends keyof TFieldValues
       ? UnpackNestedValue<TFieldValues[TFieldName]>
-      : UnpackNestedValue<LiteralToPrimitive<TFieldValue>>,
+      : UnpackNestedValue<LiteralToPrimitive<TFieldValue>>
   ): TFieldName extends keyof TFieldValues
     ? UnpackNestedValue<TFieldValues[TFieldName]>
     : UnpackNestedValue<LiteralToPrimitive<TFieldValue>>;
@@ -327,11 +326,11 @@ export type UseFormMethods<TFieldValues extends FieldValues = FieldValues> = {
     names: TFieldName[],
     defaultValues?: UnpackNestedValue<
       DeepPartial<Pick<TFieldValues, TFieldName>>
-    >,
+    >
   ): UnpackNestedValue<Pick<TFieldValues, TFieldName>>;
   watch(
     names: string[],
-    defaultValues?: UnpackNestedValue<DeepPartial<TFieldValues>>,
+    defaultValues?: UnpackNestedValue<DeepPartial<TFieldValues>>
   ): UnpackNestedValue<DeepPartial<TFieldValues>>;
   setError(name: FieldName<TFieldValues>, error: ErrorOption): void;
   clearErrors(name?: FieldName<TFieldValues> | FieldName<TFieldValues>[]): void;
@@ -343,28 +342,28 @@ export type UseFormMethods<TFieldValues extends FieldValues = FieldValues> = {
     value?: NonUndefined<TFieldValue> extends NestedValue<infer U>
       ? U
       : UnpackNestedValue<DeepPartial<LiteralToPrimitive<TFieldValue>>>,
-    options?: SetValueConfig,
+    options?: SetValueConfig
   ): void;
   trigger(
-    name?: FieldName<TFieldValues> | FieldName<TFieldValues>[],
+    name?: FieldName<TFieldValues> | FieldName<TFieldValues>[]
   ): Promise<boolean>;
   errors: FieldErrors<TFieldValues>;
   formState: FormStateProxy<TFieldValues>;
   reset: (
     values?: UnpackNestedValue<DeepPartial<TFieldValues>>,
-    omitResetState?: OmitResetState,
+    omitResetState?: OmitResetState
   ) => void;
   getValues(): UnpackNestedValue<TFieldValues>;
   getValues<TFieldName extends string, TFieldValue extends unknown>(
-    name: TFieldName,
+    name: TFieldName
   ): TFieldName extends keyof TFieldValues
     ? UnpackNestedValue<TFieldValues>[TFieldName]
     : TFieldValue;
   getValues<TFieldName extends keyof TFieldValues>(
-    names: TFieldName[],
+    names: TFieldName[]
   ): UnpackNestedValue<Pick<TFieldValues, TFieldName>>;
   handleSubmit: <TSubmitFieldValues extends FieldValues = TFieldValues>(
-    callback: SubmitHandler<TSubmitFieldValues>,
+    callback: SubmitHandler<TSubmitFieldValues>
   ) => (e?: React.BaseSyntheticEvent) => Promise<void>;
   control: Control<TFieldValues>;
 };

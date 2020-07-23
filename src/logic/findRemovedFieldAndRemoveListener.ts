@@ -1,14 +1,13 @@
-import * as React from 'react';
-import removeAllEventListeners from './removeAllEventListeners';
-import getFieldValue from './getFieldValue';
-import isRadioInput from '../utils/isRadioInput';
-import isCheckBoxInput from '../utils/isCheckBoxInput';
-import isDetached from '../utils/isDetached';
-import isArray from '../utils/isArray';
-import unset from '../utils/unset';
-import unique from '../utils/unique';
-import isUndefined from '../utils/isUndefined';
-import { Field, FieldRefs, FieldValues, Ref } from '../types/form';
+import removeAllEventListeners from "./removeAllEventListeners";
+import getFieldValue from "./getFieldValue";
+import isRadioInput from "../utils/isRadioInput";
+import isCheckBoxInput from "../utils/isCheckBoxInput";
+import isDetached from "../utils/isDetached";
+import isArray from "../utils/isArray";
+import unset from "../utils/unset";
+import unique from "../utils/unique";
+import isUndefined from "../utils/isUndefined";
+import { Field, FieldRefs, FieldValues, Ref } from "../types/form";
 
 const isSameRef = (fieldValue: Field, ref: Ref) =>
   fieldValue && fieldValue.ref === ref;
@@ -21,25 +20,25 @@ export default function findRemovedFieldAndRemoveListener<
   field: Field,
   unmountFieldsStateRef: React.MutableRefObject<Record<string, any>>,
   shouldUnregister?: boolean,
-  forceDelete?: boolean,
+  forceDelete?: boolean
 ): void {
   const {
     ref,
     ref: { name, type },
-    mutationWatcher,
+    mutationWatcher
   } = field;
-  const fieldRef = fieldsRef.current[name] as Field;
+  const fieldRef = fieldsRef[name] as Field;
 
   if (!shouldUnregister) {
     const value = getFieldValue(fieldsRef, name, unmountFieldsStateRef);
 
     if (!isUndefined(value)) {
-      unmountFieldsStateRef.current[name] = value;
+      unmountFieldsStateRef[name] = value;
     }
   }
 
   if (!type) {
-    delete fieldsRef.current[name];
+    delete fieldsRef[name];
     return;
   }
 
@@ -47,24 +46,29 @@ export default function findRemovedFieldAndRemoveListener<
     const { options } = fieldRef;
 
     if (isArray(options) && options.length) {
-      unique(options).forEach((option, index): void => {
-        const { ref, mutationWatcher } = option;
-        if ((ref && isDetached(ref) && isSameRef(option, ref)) || forceDelete) {
-          removeAllEventListeners(ref, handleChange);
+      unique(options).forEach(
+        (option, index): void => {
+          const { ref, mutationWatcher } = option;
+          if (
+            (ref && isDetached(ref) && isSameRef(option, ref)) ||
+            forceDelete
+          ) {
+            removeAllEventListeners(ref, handleChange);
 
-          if (mutationWatcher) {
-            mutationWatcher.disconnect();
+            if (mutationWatcher) {
+              mutationWatcher.disconnect();
+            }
+
+            unset(options, `[${index}]`);
           }
-
-          unset(options, `[${index}]`);
         }
-      });
+      );
 
       if (options && !unique(options).length) {
-        delete fieldsRef.current[name];
+        delete fieldsRef[name];
       }
     } else {
-      delete fieldsRef.current[name];
+      delete fieldsRef[name];
     }
   } else if ((isDetached(ref) && isSameRef(fieldRef, ref)) || forceDelete) {
     removeAllEventListeners(ref, handleChange);
@@ -73,6 +77,6 @@ export default function findRemovedFieldAndRemoveListener<
       mutationWatcher.disconnect();
     }
 
-    delete fieldsRef.current[name];
+    delete fieldsRef[name];
   }
 }

@@ -1,4 +1,3 @@
-import * as React from 'react';
 import isMessage from './isMessage';
 
 describe('isBoolean', () => {
