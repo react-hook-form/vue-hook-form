@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { ref, reactive, watch } from "vue";
 import getFieldsValues from "./logic/getFieldsValues";
 import getFieldValue from "./logic/getFieldValue";
 import {
@@ -40,6 +40,11 @@ import isNullOrUndefined from "./utils/isNullOrUndefined";
 import { DeepPartial } from "./types/utils";
 import validateField from "./logic/validateField";
 import shouldRenderBasedOnError from "./logic/shouldRenderBasedOnError";
+import isSameError from "./utils/isSameError";
+import isRadioInput from "./utils/isRadioInput";
+import isFileInput from "./utils/isFileInput";
+import isMultipleSelect from "./utils/isMultipleSelect";
+import isCheckBoxInput from "./utils/isCheckBoxInput";
 
 const isWindowUndefined = typeof window === UNDEFINED;
 const isWeb =
@@ -63,18 +68,18 @@ export function useForm<
   let isValidRef = false;
   const fieldsRef: any = {};
   const isUnMount = false;
-  const validFieldsRef = new Set();
-  const dirtyFieldsRef: any = ref({});
-  const errorsRef: any = ref({});
-  const defaultValuesAtRenderRef: any = ref({});
-  const watchFieldsHookRef: any = ref({});
-  const watchFieldsHookRenderRef: any = ref({});
+  const validFieldsRef: any = new Set();
+  const dirtyFieldsRef: any = {};
+  let errorsRef: any = ref({});
+  const defaultValuesAtRenderRef: any = {};
+  const watchFieldsHookRef: any = {};
+  const watchFieldsHookRenderRef: any = {};
   const fieldArrayNamesRef: any = new Set();
-  const unmountFieldsStateRef = ref({});
-  const defaultValuesRef = ref({});
-  const touchedFieldsRef = ref({});
+  const unmountFieldsStateRef = {};
+  const defaultValuesRef = {};
+  const touchedFieldsRef = {};
   const isWatchAllRef = false;
-  const fieldsWithValidationRef = new Set();
+  const fieldsWithValidationRef: any = new Set();
   const isSubmittedRef = false;
   const watchFieldsRef = new Set();
   const { isOnBlur, isOnSubmit, isOnChange, isOnAll } = modeChecker(mode);
@@ -82,15 +87,6 @@ export function useForm<
     isOnBlur: isReValidateOnBlur,
     isOnChange: isReValidateOnChange
   } = modeChecker(reValidateMode);
-  const readFormStateRef = {
-    isDirty: !isProxyEnabled,
-    dirtyFields: !isProxyEnabled,
-    isSubmitted: isOnSubmit,
-    submitCount: !isProxyEnabled,
-    touched: !isProxyEnabled,
-    isSubmitting: !isProxyEnabled,
-    isValid: !isProxyEnabled
-  };
   const formState = ref({
     isSubmitting: false,
     isValid: false
@@ -103,9 +99,7 @@ export function useForm<
     watchFieldsRef.has((name.match(/\w+/) || [])[0]);
 
   const setDirty = (name: InternalFieldName<TFieldValues>): boolean => {
-    const { isDirty, dirtyFields } = readFormStateRef;
-
-    if (!fieldsRef[name] || (!isDirty && !dirtyFields)) {
+    if (!fieldsRef[name]) {
       return false;
     }
 
@@ -131,8 +125,8 @@ export function useForm<
       !isEmptyObject(dirtyFieldsRef);
 
     return (
-      (isDirty && previousIsDirty !== isDirtyRef) ||
-      (dirtyFields && isDirtyFieldExist !== get(dirtyFieldsRef, name))
+      previousIsDirty !== isDirtyRef ||
+      isDirtyFieldExist !== get(dirtyFieldsRef, name)
     );
   };
 
@@ -156,40 +150,24 @@ export function useForm<
 
   const shouldRenderBaseOnError = (
     name: InternalFieldName<TFieldValues>,
-    error: FlatFieldErrors<TFieldValues>,
-    shouldRender: boolean | null = false
+    error: FlatFieldErrors<TFieldValues>
   ): boolean | void => {
-    let shouldReRender =
-      shouldRender ||
-      shouldRenderBasedOnError<TFieldValues>({
-        errors: errorsRef.current,
-        error,
-        name,
-        validFields: validFieldsRef.current,
-        fieldsWithValidation: fieldsWithValidationRef.current
-      });
-    const previousError = get(errorsRef.current, name);
+    const errors = { ...errorsRef.value };
 
     if (isEmptyObject(error)) {
-      if (fieldsWithValidationRef.current.has(name) || resolverRef.current) {
-        validFieldsRef.current.add(name);
-        shouldReRender = shouldReRender || previousError;
+      if (fieldsWithValidationRef.has(name) || resolver) {
+        validFieldsRef.add(name);
       }
 
-      errorsRef.current = unset(errorsRef.current, name);
+      if (errorsRef.value[name]) {
+        unset(errors, name);
+        errorsRef.value = errors;
+      }
     } else {
-      validFieldsRef.current.delete(name);
-      shouldReRender =
-        shouldReRender ||
-        !previousError ||
-        !isSameError(previousError, error[name] as FieldError);
+      validFieldsRef.delete(name);
 
-      set(errorsRef.current, name, error[name]);
-    }
-
-    if (shouldReRender && !isNullOrUndefined(shouldRender)) {
-      reRender();
-      return true;
+      set(errors, name, error[name]);
+      errorsRef.value = errors;
     }
   };
 
@@ -213,20 +191,14 @@ export function useForm<
           isReValidateOnBlur,
           isSubmitted: isSubmittedRef
         });
-      let shouldRender = setDirty(name) || isFieldWatched(name);
 
-      if (
-        isBlurEvent &&
-        !get(touchedFieldsRef, name) &&
-        readFormStateRef.touched
-      ) {
+      if (isBlurEvent && !get(touchedFieldsRef, name)) {
         set(touchedFieldsRef, name, true);
-        shouldRender = true;
       }
 
       if (shouldSkipValidation) {
         renderWatchedInputs(name);
-        return shouldRender && reRender();
+        return;
       }
 
       if (resolver) {
@@ -235,16 +207,13 @@ export function useForm<
           context,
           isValidateAllFieldCriteria
         );
-        const previousFormIsValid = isValidRef;
         isValidRef = isEmptyObject(errors);
 
         error = (get(errors, name)
           ? { [name]: get(errors, name) }
           : {}) as FlatFieldErrors<TFieldValues>;
 
-        if (previousFormIsValid !== isValidRef) {
-          shouldRender = true;
-        }
+        formState.value.isValid = isValidRef;
       } else {
         error = await validateField<TFieldValues>(
           fieldsRef,
@@ -256,9 +225,7 @@ export function useForm<
 
       renderWatchedInputs(name);
 
-      if (!shouldRenderBaseOnError(name, error) && shouldRender) {
-        reRender();
-      }
+      shouldRenderBaseOnError(name, error);
     }
   };
 
@@ -294,17 +261,10 @@ export function useForm<
           data.delete(field.ref.name)
         );
 
-        if (
-          readFormStateRef.isValid ||
-          readFormStateRef.touched ||
-          readFormStateRef.isDirty
-        ) {
-          isDirtyRef = !isEmptyObject(dirtyFieldsRef);
-          reRender();
+        isDirtyRef = !isEmptyObject(dirtyFieldsRef);
 
-          if (resolverRef) {
-            validateResolver();
-          }
+        if (resolver) {
+          validateResolver();
         }
       }
     }
@@ -448,12 +408,12 @@ export function useForm<
       }
     }
 
-    if (resolver && !isFieldArray && readFormStateRef.isValid) {
+    if (resolver && !isFieldArray) {
       validateResolver();
     } else if (!isEmptyObject(validateOptions)) {
       fieldsWithValidationRef.add(name);
 
-      if (!isOnSubmit && readFormStateRef.isValid) {
+      if (!isOnSubmit) {
         validateField(
           fieldsRef,
           isValidateAllFieldCriteria,
