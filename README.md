@@ -19,8 +19,10 @@ export default {
       <form onSubmit={this.handleSubmit(this.onSubmit)}>
         <input ref={this.register({ required: true })} name="firstName" />
         {this.errors.firstName && "This is required."}
+
         <input ref={this.register({ required: true })} name="lastName" />
         {this.errors.lastName && "This is required."}
+
         <input type="submit" />
       </form>
     );
